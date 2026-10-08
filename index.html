@@ -30,3 +30,151 @@ details{margin:0 0 14px}
 summary{cursor:pointer;font-weight:800;font-size:1.05rem;padding:12px 16px;background:var(--card);border:1px solid var(--line);border-radius:12px;list-style:none;display:flex;justify-content:space-between;gap:8px}
 summary::-webkit-details-marker{display:none}
 summary small{font-weight:600;color:var(--acc);white-space:nowrap}
+details[open] summary{margin-bottom:12px}
+.days{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.day{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.day.today{outline:3px solid var(--acc)}
+.day.exam{background:var(--exam);color:var(--examink);border-color:var(--exam)}
+.day h3{margin:0;font-size:1.05rem}
+.day ul{list-style:none;margin:10px 0 0;padding:0}
+.day li{border-top:1px solid var(--line)}
+.day label{display:flex;gap:10px;align-items:flex-start;padding:8px 0;cursor:pointer}
+.day input[type=checkbox]{width:20px;height:20px;margin-top:2px;accent-color:var(--ok);flex:none}
+.day label span small{display:block;color:var(--mute);font-size:.82rem}
+.day input:checked+span{text-decoration:line-through;opacity:.55}
+.wrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;min-width:420px}
+td{padding:9px 14px;text-align:left;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+td:first-child{white-space:nowrap;font-weight:600;width:1%}
+.tips{padding-left:18px;margin:0}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <div>
+    <h1>Exam timetable</h1>
+    <p class="sub">Study windows: 5–7 AM and 7 PM–12 AM · 6 subjects × 5 units · Oct 9 to Nov 15 · exams start Nov 16</p>
+  </div>
+  <div class="count"><b id="left">–</b>days to go</div>
+</header>
+
+<section class="prog">
+  <strong id="ptxt">0 of 114 tasks done</strong>
+  <div class="bar"><i id="pbar"></i></div>
+  <a id="jump" href="#today">Jump to today ↓</a>
+</section>
+
+<h2>Your subjects <small style="font-weight:400;color:var(--mute)">(type the real names)</small></h2>
+<div class="names" id="names"></div>
+
+<h2>38-day plan</h2>
+<div id="days"></div>
+
+<h2>Phase 1 daily rhythm (learning days)</h2>
+<div class="wrap"><table>
+<tr><td>05:00–07:00</td><td>Learn one unit in depth</td></tr>
+<tr><td>07:00–19:00</td><td>College, plus a 20-minute nap when you reach home</td></tr>
+<tr><td>19:00–21:00</td><td>Learn one unit in depth</td></tr>
+<tr><td>21:00–21:30</td><td>Dinner</td></tr>
+<tr><td>21:30–23:30</td><td>Practice questions and write 10 key points</td></tr>
+<tr><td>23:30–00:00</td><td>Quick recall of the day, then sleep</td></tr>
+</table></div>
+
+<h2>Inside each 2-hour block</h2>
+<div class="wrap"><table>
+<tr><td>0:00–0:10</td><td>Skim the unit and list topics</td></tr>
+<tr><td>0:10–1:30</td><td>Study important topics, short notes, solve examples</td></tr>
+<tr><td>1:30–2:00</td><td>Close the book and recall from memory</td></tr>
+</table></div>
+
+<h2>Rules that keep this working</h2>
+<ul class="tips">
+<li>Missed a day? Don't double up. Move the missed tasks into the next free evening slot.</li>
+<li>Hard units go in the 5 AM block, when your mind is fresh.</li>
+<li>Phase 3 mock papers show your weak topics. Fix them in Phase 4.</li>
+<li>You get about 5 hours of sleep, so sleep by 11 PM when a day finishes early.</li>
+</ul>
+</main>
+
+<script>
+var KEY="exam-tt-v4", st={n:[],c:{}};
+try{st=Object.assign(st,JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}}
+var names=[0,1,2,3,4,5].map(function(i){return st.n[i]||"Subject "+(i+1)});
+var DN=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],MN=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+var TM=["05:00–07:00","19:00–21:00","21:30–23:30"];
+var P=[["Phase 1 · Learn all 30 units","Oct 9–23",15],["Phase 2 · Revision rounds","Oct 24–Nov 4",12],["Phase 3 · Timed mock papers","Nov 5–10",6],["Phase 4 · Final revision","Nov 11–15",5]];
+function S(t){return function(){return t}}
+function N(s,t){return function(){return names[s]+" · "+t}}
+function items(ph,k){
+  var a=[],s,z;
+  if(ph==0){
+    [2*k,2*k+1].forEach(function(u,q){a.push([N(Math.floor(u/5),"Unit "+(u%5+1)),TM[q]])});
+    a.push([S("Practice questions and 10 key points"),TM[2]]);
+  }
+  if(ph==1){
+    s=k>>1;
+    z=(k&1)?["Units 1–2 · write timed answers","Units 3–5 · write timed answers","Fix weak topics and formulas"]:["Units 1–2 · revise and short notes","Units 3–5 · revise and short notes","Important questions, Units 1–5"];
+    z.forEach(function(t,q){a.push([N(s,t),TM[q]])});
+  }
+  if(ph==2){
+    [["Recall weak topics","05:00–07:00"],["Full timed paper (3 hours)","19:00–22:00"],["Check answers and fix mistakes","22:15–23:45"]].forEach(function(t){a.push([N(k,t[0]),t[1]])});
+  }
+  if(ph==3){
+    if(k<3){a.push([N(2*k,"all 5 units, quick pass"),TM[0]],[N(2*k+1,"all 5 units, quick pass"),TM[1]],[S("Formulas and important questions"),TM[2]])}
+    else if(k==3){a.push([S("Weak topics, subjects 1–3"),TM[0]],[S("Weak topics, subjects 4–6"),TM[1]],[S("Formulas, definitions and diagrams"),TM[2]])}
+    else{a.push([S("Skim key points of your first paper"),TM[0]],[S("Light revision only, no new topics"),TM[1]],[S("Pack ID, hall ticket, pens. Sleep by 10:30 PM"),"21:30–22:00"])}
+  }
+  return a;
+}
+var all=[],root=document.getElementById("days"),now=new Date(),t0=new Date(now.getFullYear(),now.getMonth(),now.getDate()),di=0;
+function head(dt){return DN[dt.getDay()]+", "+MN[dt.getMonth()]+" "+dt.getDate()}
+P.forEach(function(p,pi){
+  var det=document.createElement("details"),grid=document.createElement("div");
+  det.innerHTML='<summary><span>'+p[0]+'</span><small>'+p[1]+'</small></summary>';
+  grid.className="days";
+  for(var k=0;k<p[2];k++,di++){
+    var dt=new Date(2026,9,9+di),card=document.createElement("div"),h='<h3>'+head(dt)+'</h3><ul>';
+    card.className="day";
+    if(dt.getTime()==t0.getTime()){card.className+=" today";card.id="today"}
+    items(pi,k).forEach(function(it,q){
+      var id=di+"-"+q;all.push({id:id,t:it[0]});
+      h+='<li><label><input type="checkbox" data-id="'+id+'"'+(st.c[id]?' checked':'')+'><span><b class="t" data-id="'+id+'"></b><small>'+it[1]+'</small></span></label></li>';
+    });
+    card.innerHTML=h+'</ul>';grid.appendChild(card);
+  }
+  det.appendChild(grid);root.appendChild(det);
+});
+var ex=new Date(2026,10,16),ec=document.createElement("div");
+ec.className="day exam";
+if(t0.getTime()==ex.getTime()){ec.className+=" today";ec.id="today"}
+ec.innerHTML='<h3>'+head(ex)+' · Exam day</h3><p style="margin:10px 0 0">At 5–7 AM skim only key points of your first paper. Eat well and reach the hall 30 minutes early.</p>';
+root.appendChild(ec);
+function labels(){all.forEach(function(it){var e=document.querySelector('.t[data-id="'+it.id+'"]');if(e)e.textContent=it.t()})}
+function progress(){
+  var n=all.filter(function(it){return st.c[it.id]}).length;
+  document.getElementById("ptxt").textContent=n+" of "+all.length+" tasks done";
+  document.getElementById("pbar").style.width=(n/all.length*100)+"%";
+}
+root.addEventListener("change",function(e){
+  if(e.target.type=="checkbox"){st.c[e.target.dataset.id]=e.target.checked;save();progress()}
+});
+var nb=document.getElementById("names");
+names.forEach(function(v,i){
+  var inp=document.createElement("input");
+  inp.value=v;inp.setAttribute("aria-label","Subject "+(i+1)+" name");
+  inp.addEventListener("input",function(){names[i]=inp.value||"Subject "+(i+1);st.n[i]=inp.value;save();labels()});
+  nb.appendChild(inp);
+});
+var left=Math.round((ex-t0)/864e5);
+document.getElementById("left").textContent=left>0?left:(left==0?"Today":"Done");
+var td=document.getElementById("today"),dets=root.querySelectorAll("details");
+if(td&&td.closest("details")){td.closest("details").open=true;document.getElementById("jump").style.display="inline-block"}
+else dets[0].open=true;
+labels();progress();
+</script>
+</body>
+</html>
